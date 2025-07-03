@@ -1689,36 +1689,7 @@ const AlfaAITradingPlatform: React.FC = () => {
         <main className="flex-1">
           {activeTab === 'dashboard' && renderDashboard()}
           {activeTab === 'stockSelection' && renderStockSelection()}
-          {activeTab === 'strategies' && {/* Quick Actions */}
-<div className="bg-white rounded-xl shadow-sm border p-6">
-  <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-  <div className="flex flex-wrap gap-4">
-    <button 
-      onClick={() => setStrategies(prev => prev.map(s => ({ ...s, active: true })))}
-      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg"
-    >
-      Enable All Strategies
-    </button>
-    <button 
-      onClick={() => setStrategies(prev => prev.map(s => ({ ...s, active: false })))}
-      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
-    >
-      Disable All Strategies
-    </button>
-    <button 
-      onClick={() => setStrategies(prev => prev.map(s => s.riskLevel === 'Low' ? { ...s, active: true } : { ...s, active: false }))}
-      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
-    >
-      Enable Low Risk Only
-    </button>
-    <button 
-      onClick={() => setStrategies(prev => prev.map(s => s.winRate > 75 ? { ...s, active: true } : { ...s, active: false }))}
-      className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg"
-    >
-      Enable High Win Rate (75%+)
-    </button>
-  </div>
-</div>
+          {activeTab === 'strategies' && renderStrategies()}
           {activeTab === 'signals' && renderSignals()}
           {activeTab === 'apiIntegration' && renderApiIntegration()}
           {activeTab === 'tradeHistory' && renderTradeHistory()}
