@@ -1,22 +1,119 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Clock, RefreshCw, Settings, HelpCircle, FileText, Users, PieChart, Menu, X, User, LogOut, Bell, Eye, EyeOff, Wifi, WifiOff, Activity, DollarSign, Zap, AlertCircle, CheckCircle } from 'lucide-react';
 
-const AlfaAITradingPlatform = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [apiLogin, setApiLogin] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [loginError, setLoginError] = useState('');
+// TypeScript Interfaces
+interface SignalData {
+  sno: number;
+  time: string;
+  type: string;
+  symbol: string;
+  price: number;
+  strategy: string;
+  tradeType: string;
+}
+
+interface TradeHistoryData {
+  sno: number;
+  entryTime: string;
+  exitTime: string;
+  symbol: string;
+  strategy: string;
+  entryType: string;
+  qty: number;
+  entryPrice: number;
+  exitPrice: number;
+  total: string;
+}
+
+interface SelectedStock {
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  volume: number;
+  selected: boolean;
+  sector: string;
+}
+
+interface Strategy {
+  id: number;
+  name: string;
+  type: string;
+  riskLevel: string;
+  winRate: number;
+  description: string;
+  active: boolean;
+  config: Record<string, any>;
+}
+
+interface DashboardItem {
+  id: number;
+  symbol: string;
+  lotSize: number;
+  maxQty: number;
+  quantity: number;
+  currentQty: number;
+  strategy: string;
+  orderType: string;
+  productType: string;
+  trading: boolean;
+}
+
+interface BrokerApi {
+  name: string;
+  status: string;
+  color: string;
+  logo: string;
+  apiKey: string;
+  lastSync: string;
+}
+
+interface ZerodhaApi {
+  isConnected: boolean;
+  apiKey: string;
+  accessToken: string;
+  clientId: string;
+  status: string;
+}
+
+interface LoginData {
+  username: string;
+  password: string;
+}
+
+interface CurrentUser {
+  name: string;
+  email: string;
+  phone: string;
+  id: string;
+}
+
+interface PortfolioStats {
+  totalPL: number;
+  todayPL: number;
+  totalTrades: number;
+  winRate: number;
+  activeBrokers: number;
+  activeStrategies: number;
+}
+
+const AlfaAITradingPlatform: React.FC = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [apiLogin, setApiLogin] = useState<boolean>(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [loginError, setLoginError] = useState<string>('');
+  const [stockSelectionMode, setStockSelectionMode] = useState<string>('automatic');
   
   // Login state
-  const [loginData, setLoginData] = useState({
+  const [loginData, setLoginData] = useState<LoginData>({
     username: '',
     password: ''
   });
 
   // User data
-  const [currentUser] = useState({
+  const [currentUser] = useState<CurrentUser>({
     name: 'Kumar',
     email: 'alfasystemes@gmail.com',
     phone: '9703877760',
@@ -24,8 +121,7 @@ const AlfaAITradingPlatform = () => {
   });
 
   // Stock selection state
-  const [stockSelectionMode, setStockSelectionMode] = useState('automatic');
-  const [selectedStocks, setSelectedStocks] = useState([
+  const [selectedStocks, setSelectedStocks] = useState<SelectedStock[]>([
     { symbol: 'RELIANCE', name: 'Reliance Industries', price: 2456.75, change: 1.23, volume: 1234567, selected: true, sector: 'Energy' },
     { symbol: 'TCS', name: 'Tata Consultancy Services', price: 3567.80, change: -0.45, volume: 987654, selected: true, sector: 'IT' },
     { symbol: 'INFY', name: 'Infosys Limited', price: 1678.90, change: 2.11, volume: 876543, selected: false, sector: 'IT' },
@@ -37,7 +133,7 @@ const AlfaAITradingPlatform = () => {
   ]);
 
   // Enhanced strategies with proper state management
-  const [strategies, setStrategies] = useState([
+  const [strategies, setStrategies] = useState<Strategy[]>([
     { id: 1, name: 'BREAKOUT 5M', type: 'Momentum', riskLevel: 'Medium', winRate: 78.5, description: 'Price breakout strategy on 5-minute timeframe', active: true, config: { timeframe: '5m', threshold: 0.5 } },
     { id: 2, name: 'RSI DIVERGENCE', type: 'Technical', riskLevel: 'Low', winRate: 82.3, description: 'RSI divergence detection strategy', active: true, config: { rsiPeriod: 14, divergenceThreshold: 5 } },
     { id: 3, name: 'MOVING AVERAGE CROSSOVER', type: 'Trend', riskLevel: 'Low', winRate: 75.2, description: 'EMA crossover signals', active: false, config: { fastEMA: 9, slowEMA: 21 } },
@@ -53,15 +149,15 @@ const AlfaAITradingPlatform = () => {
   ]);
 
   // API integration state
-  const [zerodhaApi, setZerodhaApi] = useState({
-    isConnected: apiLogin,
+  const [zerodhaApi, setZerodhaApi] = useState<ZerodhaApi>({
+    isConnected: true,
     apiKey: 'kitefront_12345',
     accessToken: '',
     clientId: 'DH1234',
-    status: apiLogin ? 'Connected' : 'Disconnected'
+    status: 'Connected'
   });
 
-  const [brokerApis, setBrokerApis] = useState([
+  const [brokerApis, setBrokerApis] = useState<BrokerApi[]>([
     { name: 'Zerodha', status: 'Connected', color: 'green', logo: 'Z', apiKey: 'kitefront_12345', lastSync: '2 mins ago' },
     { name: 'Upstox', status: 'Disconnected', color: 'red', logo: 'U', apiKey: '', lastSync: 'Never' },
     { name: 'Angel Broking', status: 'Connected', color: 'green', logo: 'A', apiKey: 'angel_789012', lastSync: '5 mins ago' },
@@ -70,7 +166,7 @@ const AlfaAITradingPlatform = () => {
     { name: 'Kotak Securities', status: 'Connected', color: 'green', logo: 'K', apiKey: 'kotak_345678', lastSync: '1 min ago' }
   ]);
 
-  const [dashboardData, setDashboardData] = useState([
+  const [dashboardData, setDashboardData] = useState<DashboardItem[]>([
     {
       id: 1,
       symbol: 'BANKNIFTY[O]',
@@ -97,7 +193,7 @@ const AlfaAITradingPlatform = () => {
     }
   ]);
 
-  const [signalsData, setSignalsData] = useState([
+  const [signalsData, setSignalsData] = useState<SignalData[]>([
     { sno: 1, time: '02/07/2025 10:18:29', type: 'LX', symbol: 'BANKNIFTY31JUL25568000PE', price: 570.00, strategy: 'BREAKOUT 5M', tradeType: 'MT_4' },
     { sno: 2, time: '02/07/2025 10:05:29', type: 'LX', symbol: 'BANKNIFTY31JUL25568000PE', price: 567.15, strategy: 'RSI DIVERGENCE', tradeType: 'MT_4' },
     { sno: 3, time: '02/07/2025 10:01:52', type: 'LE', symbol: 'NIFTY03JUL25257000PE', price: 190.35, strategy: 'BOLLINGER BANDS', tradeType: 'MT_4' },
@@ -105,7 +201,7 @@ const AlfaAITradingPlatform = () => {
     { sno: 5, time: '02/07/2025 09:43:33', type: 'LE', symbol: 'TCS', price: 3567.80, strategy: 'MACD SIGNAL', tradeType: 'MT_4' }
   ]);
 
-  const [tradeHistoryData] = useState([
+  const [tradeHistoryData] = useState<TradeHistoryData[]>([
     {
       sno: 1,
       entryTime: '02/07/2025 09:40:52',
@@ -144,7 +240,7 @@ const AlfaAITradingPlatform = () => {
     }
   ]);
 
-  const [portfolioStats] = useState({
+  const [portfolioStats] = useState<PortfolioStats>({
     totalPL: 4275.50,
     todayPL: 1245.25,
     totalTrades: 156,
@@ -175,25 +271,37 @@ const AlfaAITradingPlatform = () => {
     const interval = setInterval(() => {
       if (Math.random() > 0.7) {
         const strategyNames = strategies.filter(s => s.active).map(s => s.name);
-        const stockSymbols = [...selectedStocks.filter(s => s.selected).map(s => s.symbol), 'BANKNIFTY31JUL25568000PE', 'NIFTY03JUL25257000PE'];
+        const stockSymbols = [
+          ...selectedStocks.filter(s => s.selected).map(s => s.symbol), 
+          'BANKNIFTY31JUL25568000PE', 
+          'NIFTY03JUL25257000PE'
+        ];
         
-        const newSignal = {
+        const newSignal: SignalData = {
           sno: signalsData.length + 1,
-          time: new Date().toLocaleString('en-GB').replace(',', ''),
+          time: new Date().toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit', 
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          }).replace(',', ''),
           type: Math.random() > 0.5 ? 'LX' : 'LE',
-          symbol: stockSymbols[Math.floor(Math.random() * stockSymbols.length)],
-          price: (Math.random() * 500 + 200).toFixed(2),
+          symbol: stockSymbols[Math.floor(Math.random() * stockSymbols.length)] || 'BANKNIFTY31JUL25568000PE',
+          price: parseFloat((Math.random() * 500 + 200).toFixed(2)),
           strategy: strategyNames[Math.floor(Math.random() * strategyNames.length)] || 'BREAKOUT 5M',
           tradeType: 'MT_4'
         };
-        setSignalsData(prev => [newSignal, ...prev.slice(0, 9)]);
+        
+        setSignalsData((prev: SignalData[]) => [newSignal, ...prev.slice(0, 9)]);
       }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [signalsData.length, selectedStocks, strategies, apiLogin]);
+  }, [selectedStocks, strategies, apiLogin, signalsData.length]);
 
-  const handleLogin = (e) => {
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoginError('');
     
@@ -265,7 +373,7 @@ const AlfaAITradingPlatform = () => {
     setApiLogin(false);
   };
 
-  const toggleBrokerConnection = (brokerName) => {
+  const toggleBrokerConnection = (brokerName: string) => {
     setBrokerApis(prev => prev.map(broker => {
       if (broker.name === brokerName) {
         const newStatus = broker.status === 'Connected' ? 'Disconnected' : 'Connected';
@@ -280,7 +388,7 @@ const AlfaAITradingPlatform = () => {
     }));
   };
 
-  const toggleStrategy = (strategyId) => {
+  const toggleStrategy = (strategyId: number) => {
     setStrategies(prev => prev.map(strategy => 
       strategy.id === strategyId 
         ? { ...strategy, active: !strategy.active }
@@ -288,7 +396,7 @@ const AlfaAITradingPlatform = () => {
     ));
   };
 
-  const configureStrategy = (strategyId) => {
+  const configureStrategy = (strategyId: number) => {
     const strategy = strategies.find(s => s.id === strategyId);
     if (strategy) {
       const configString = Object.entries(strategy.config)
@@ -299,13 +407,13 @@ const AlfaAITradingPlatform = () => {
     }
   };
 
-  const updateQuantity = (id, newQuantity) => {
+  const updateQuantity = (id: number, newQuantity: number) => {
     setDashboardData(prev => prev.map(item => 
       item.id === id ? { ...item, quantity: newQuantity } : item
     ));
   };
 
-  const toggleTrading = (id) => {
+  const toggleTrading = (id: number) => {
     setDashboardData(prev => prev.map(item => 
       item.id === id ? { ...item, trading: !item.trading } : item
     ));
@@ -740,7 +848,7 @@ const AlfaAITradingPlatform = () => {
           <div className="mt-6 flex space-x-4">
             <button 
               onClick={() => {
-                const newPosition = {
+                const newPosition: DashboardItem = {
                   id: dashboardData.length + 1,
                   symbol: 'NEW_SYMBOL',
                   lotSize: 50,
