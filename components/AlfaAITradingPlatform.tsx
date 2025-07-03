@@ -1331,7 +1331,7 @@ const AlfaAITradingPlatform: React.FC = () => {
             onClick={() => setStrategies(prev => prev.map(s => s.winRate > 75 ? { ...s, active: true } : { ...s, active: false }))}
             className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg"
           >
-            Enable High Win Rate (>75%)
+            Enable High Win Rate (75%+)
           </button>
         </div>
       </div>
